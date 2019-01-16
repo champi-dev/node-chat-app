@@ -43,16 +43,27 @@ io.on('connection', (socket) => {
 		callback()
 	})
 
-	socket.on('createMessage', ({ from, text }, callback) => {
-		io.emit('newMessage', generateMessage(from, text))
+	socket.on('createMessage', ({ text }, callback) => {
+		var user = users.getUser(socket.id)
+
+		if (user && isRealString(text)) {
+			io.to(user.room).emit('newMessage', generateMessage(user.name, text))
+		}
+
 		callback()
 	})
 
 	socket.on('createLocationMessage', ({ latitude, longitude }) => {
-		io.emit(
-			'newLocationMessage',
-			generateLocationMessage('Admin', latitude, longitude)
-		)
+		var user = users.getUser(socket.id)
+
+		if (user) {
+			io
+				.to(user.room)
+				.emit(
+					'newLocationMessage',
+					generateLocationMessage(user.name, latitude, longitude)
+				)
+		}
 	})
 
 	socket.on('disconnect', () => {
